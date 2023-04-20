@@ -20,18 +20,18 @@ module Generator
     create_table_speech_therapists(file)
     create_table_services(file)
     create_table_comments(file)
-    create_table_rates(file)
+    create_table_types(file)
     create_table_contracts(file)
   end
 
   # метод заполнения всех таблиц
   def insert_into
-    insert_into_clients
-    insert_into_banned_clients
-    insert_into_speech_therapists
-    insert_into_services
-    insert_into_comments
-    insert_into_rates
+    #insert_into_clients
+    #insert_into_banned_clients
+    #insert_into_speech_therapists
+    #insert_into_types
+    #insert_into_services
+    #insert_into_comments
     insert_into_contracts
   end
 
@@ -43,10 +43,11 @@ module Generator
               "\tsurname varchar(23) NOT NULL,\n" \
               "\tfirst_name varchar(23) NOT NULL,\n" \
               "\tpatronymic varchar(23) NOT NULL,\n" \
+              "\tbirthday date NOT NULL,\n" \
               "\tphone varchar(11) NOT NULL,\n" \
               "\tpassport_series varchar(4) NOT NULL,\n" \
               "\tpassport_number varchar(6) NOT NULL,\n" \
-              "\tbirthday date NOT NULL\n" \
+              "\tregistration_date date NOT NULL\n" \
               ");\n\n")
   end
 
@@ -56,6 +57,7 @@ module Generator
               "CREATE TABLE banned_clients(\n" \
               "\tid serial PRIMARY KEY,\n" \
               "\treason text NOT NULL,\n" \
+              "\tban_date date NOT NULL,\n" \
               "\tclient_id integer REFERENCES clients (id) NOT NULL\n" \
               ");\n\n")
   end
@@ -65,6 +67,11 @@ module Generator
     file.puts("DROP TABLE IF EXISTS speech_therapists CASCADE;\n" \
               "CREATE TABLE speech_therapists(\n" \
               "\tid serial PRIMARY KEY,\n" \
+              "\texperience integer NOT NULL,\n" \
+              "\teducation text NOT NULL,\n" \
+              "\tachievements text NOT NULL,\n" \
+              "\tphoto_url text NOT NULL,\n" \
+              "\tverificated boolean NOT NULL,\n" \
               "\tclient_id integer REFERENCES clients (id) NOT NULL\n" \
               ");\n\n")
   end
@@ -76,7 +83,7 @@ module Generator
               "\tid serial PRIMARY KEY,\n" \
               "\tprice_per_hour integer NOT NULL,\n" \
               "\tdescription text NOT NULL,\n" \
-              "\tspeech_therapist_id integer REFERENCES speech_therapists (id) NOT NULL\n" \
+              "\ttype_id integer REFERENCES types (id) NOT NULL\n" \
               ");\n\n")
   end
 
@@ -86,19 +93,19 @@ module Generator
               "CREATE TABLE comments(\n" \
               "\tid serial PRIMARY KEY,\n" \
               "\tbody text NOT NULL,\n" \
+              "\trate_value integer NOT NULL,\n" \
+              "\tcreation_date date NOT NULL,\n" \
               "\tclient_id integer REFERENCES clients (id) NOT NULL,\n" \
               "\tspeech_therapist_id integer REFERENCES speech_therapists (id) NOT NULL\n" \
               ");\n\n")
   end
 
-  # метод создания таблицы оценок логопедам
-  def create_table_rates(file)
-    file.puts("DROP TABLE IF EXISTS rates;\n" \
-              "CREATE TABLE rates(\n" \
+  # метод создания таблицы типов услуг
+  def create_table_types(file)
+    file.puts("DROP TABLE IF EXISTS types CASCADE;\n" \
+              "CREATE TABLE types(\n" \
               "\tid serial PRIMARY KEY,\n" \
-              "\tcount integer NOT NULL,\n" \
-              "\tclient_id integer REFERENCES clients (id) NOT NULL,\n" \
-              "\tspeech_therapist_id integer REFERENCES speech_therapists (id) NOT NULL\n" \
+              "\tname varchar(32) NOT NULL\n" \
               ");\n\n")
   end
 
@@ -111,7 +118,8 @@ module Generator
               "\ttotal_cost integer NOT NULL,\n" \
               "\tissue_date date NOT NULL,\n" \
               "\tclient_id integer REFERENCES clients (id) NOT NULL,\n" \
-              "\tservice_id integer REFERENCES services (id) NOT NULL\n" \
+              "\tservice_id integer REFERENCES services (id) NOT NULL,\n" \
+              "\tspeech_therapist_id integer REFERENCES speech_therapists (id) NOT NULL\n" \
               ");\n")
   end
 
@@ -120,74 +128,80 @@ module Generator
     names = parse_names
 
     File.open('clients_data.sql', 'w') do |file|
-      file.puts('INSERT INTO clients (surname, first_name, patronymic, phone, ' \
-        'passport_series, passport_number, birthday) VALUES')
+      file.puts('INSERT INTO clients (surname, first_name, patronymic, birthday, ' \
+        'phone, passport_series, passport_number, registration_date) VALUES')
 
       39_999.times do |n|
-        file.puts("\t('#{names[n][0]}', '#{names[n][1]}', '#{names[n][2]}', '#{random_phone}', " \
-          "'#{random_passport_series}', '#{random_passport_number}', '#{random_birthday}'),")
+        file.puts("\t('#{names[n][0]}', '#{names[n][1]}', '#{names[n][2]}', '#{random_birthday}', " \
+          "'#{random_phone}', '#{random_passport_series}', '#{random_passport_number}', '#{random_date}'),")
       end
 
-      file.puts("\t('#{names[-1][0]}', '#{names[-1][1]}', '#{names[-1][2]}', '#{random_phone}', " \
-         "'#{random_passport_series}', '#{random_passport_number}', '#{random_birthday}');")
+      file.puts("\t('#{names[-1][0]}', '#{names[-1][1]}', '#{names[-1][2]}', '#{random_birthday}', " \
+         "'#{random_phone}', '#{random_passport_series}', '#{random_passport_number}', '#{random_date}');")
     end
   end
 
   # метод для заполнения таблицы заблокированных пользователей
   def insert_into_banned_clients
     File.open('banned_clients_data.sql', 'w') do |file|
-      file.puts('INSERT INTO banned_clients (reason, client_id) VALUES')
-      99.times { file.puts("\t('#{Faker::Lorem.paragraph}', #{rand(1..40_000)}),") }
-      file.puts("\t('#{Faker::Lorem.paragraph}', #{rand(1..40_000)});")
+      file.puts('INSERT INTO banned_clients (reason, ban_date, client_id) VALUES')
+      99.times { file.puts("\t('#{Faker::Lorem.paragraph}', '#{random_date}', #{rand(1..40_000)}),") }
+      file.puts("\t('#{Faker::Lorem.paragraph}', '#{random_date}', #{rand(1..40_000)});")
     end
   end
 
   # метод для заполнения таблицы логопедов
   def insert_into_speech_therapists
     File.open('speech_therapists_data.sql', 'w') do |file|
-      file.puts('INSERT INTO speech_therapists (client_id) VALUES')
-      4999.times { file.puts("\t(#{rand(1..40_000)}),") }
-      file.puts("\t(#{rand(1..40_000)});")
+      file.puts('INSERT INTO speech_therapists (experience, education, achievements, photo_url,' \
+        'verificated, client_id) VALUES')
+      4_999.times do |n|
+        file.puts("\t(#{rand(1..10)}, '#{Faker::Lorem.paragraph}', '#{Faker::Lorem.paragraph}', '#{Faker::Internet.url}', " \
+          "#{[true, false].sample}, #{rand(1..40_000)}),")
+      end
+
+      file.puts("\t(#{rand(1..10)}, '#{Faker::Lorem.paragraph}', '#{Faker::Lorem.paragraph}', '#{Faker::Internet.url}', " \
+        "#{[true, false].sample}, #{rand(1..40_000)});")
     end
   end
 
   # метод для заполнения таблицы услуг логопедов
   def insert_into_services
     File.open('services_data.sql', 'w') do |file|
-      file.puts('INSERT INTO services (price_per_hour, description, speech_therapist_id) VALUES')
-      49_999.times { file.puts("\t(#{rand(1..10) * 1000}, '#{Faker::Lorem.paragraph}', #{rand(1..5000)}),") }
-      file.puts("\t(#{rand(1..10) * 1000}, '#{Faker::Lorem.paragraph}', #{rand(1..5000)});")
+      file.puts('INSERT INTO services (price_per_hour, description, type_id) VALUES')
+      49_999.times { file.puts("\t(#{rand(1..10) * 1000}, '#{Faker::Lorem.paragraph}', #{rand(1..20)}),") }
+      file.puts("\t(#{rand(1..10) * 1000}, '#{Faker::Lorem.paragraph}', #{rand(1..20)});")
     end
   end
 
   # метод для заполнения таблицы комментариев
   def insert_into_comments
     File.open('comments_data.sql', 'w') do |file|
-      file.puts('INSERT INTO comments (body, client_id, speech_therapist_id) VALUES')
-      99_999.times { file.puts("\t('#{Faker::Lorem.paragraph}', #{rand(1..40_000)}, #{rand(1..5000)}),") }
-      file.puts("\t('#{Faker::Lorem.paragraph}', #{rand(1..40_000)}, #{rand(1..5000)});")
+      file.puts('INSERT INTO comments (body, rate_value, creation_date, client_id, speech_therapist_id) VALUES')
+      99_999.times { file.puts("\t('#{Faker::Lorem.paragraph}', #{rand(1..5)}, '#{random_date}', #{rand(1..40_000)}, #{rand(1..5000)}),") }
+      file.puts("\t('#{Faker::Lorem.paragraph}', #{rand(1..5)}, '#{random_date}', #{rand(1..40_000)}, #{rand(1..5000)});")
     end
   end
 
-  # метод для заполнения таблицы оценок
-  def insert_into_rates
-    File.open('rates_data.sql', 'w') do |file|
-      file.puts('INSERT INTO rates (count, client_id, speech_therapist_id) VALUES')
-      99_999.times { file.puts("\t(#{rand(1..5)}, #{rand(1..40_000)}, #{rand(1..5000)}),") }
-      file.puts("\t(#{rand(1..5)}, #{rand(1..40_000)}, #{rand(1..5000)});")
+  # метод для заполнения таблицы типов услуг
+  def insert_into_types
+    File.open('types_data.sql', 'w') do |file|
+      file.puts('INSERT INTO types (name) VALUES')
+      19.times { file.puts("\t('#{Faker::Lorem.word}'),") }
+      file.puts("\t('#{Faker::Lorem.word}');")
     end
   end
 
   # метод для заполения таблицы договоров
   def insert_into_contracts
     File.open('contracts_data.sql', 'w') do |file|
-      file.puts('INSERT INTO contracts (hours, total_cost, issue_date, client_id, service_id) VALUES')
+      file.puts('INSERT INTO contracts (hours, issue_date, total_cost, client_id, speech_therapist, service_id) VALUES')
       4_999_999.times do
-        file.puts("\t(#{rand(1..20)}, #{rand(1..20) * 1000}, '#{random_issue_date}', " \
-                  "#{rand(1..40_000)}, #{rand(1..50_000)}),")
+        file.puts("\t(#{rand(1..20)}, '#{random_date}', #{rand(1..20) * 1000}, " \
+                  "#{rand(1..40_000)}, #{rand(1..5_000)} #{rand(1..50_000)}),")
       end
-      file.puts("\t(#{rand(1..20)}, #{rand(1..20) * 1000}, '#{random_issue_date}', " \
-                "#{rand(1..40_000)}, #{rand(1..50_000)});")
+      file.puts("\t(#{rand(1..20)}, '#{random_date}', #{rand(1..20) * 1000}, " \
+                "#{rand(1..40_000)}, #{rand(1..5_000)}, #{rand(1..50_000)});")
     end
   end
 
@@ -227,8 +241,8 @@ module Generator
     Faker::Date.between(from: '1953-03-05', to: '2013-03-05')
   end
 
-  # случайная дата заключения договора
-  def random_issue_date
+  # случайная дата для различных полей
+  def random_date
     Faker::Date.between(from: '2020-01-01', to: '2023-02-06')
   end
 end

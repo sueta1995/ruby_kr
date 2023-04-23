@@ -26,12 +26,12 @@ module Generator
 
   # метод заполнения всех таблиц
   def insert_into
-    #insert_into_clients
-    #insert_into_banned_clients
-    #insert_into_speech_therapists
-    #insert_into_types
-    #insert_into_services
-    #insert_into_comments
+    # insert_into_clients
+    # insert_into_banned_clients
+    # insert_into_speech_therapists
+    # insert_into_types
+    # insert_into_services
+    # insert_into_comments
     insert_into_contracts
   end
 
@@ -195,10 +195,10 @@ module Generator
   # метод для заполения таблицы договоров
   def insert_into_contracts
     File.open('contracts_data.sql', 'w') do |file|
-      file.puts('INSERT INTO contracts (hours, issue_date, total_cost, client_id, speech_therapist, service_id) VALUES')
+      file.puts('INSERT INTO contracts (hours, issue_date, total_cost, client_id, speech_therapist_id, service_id) VALUES')
       4_999_999.times do
         file.puts("\t(#{rand(1..20)}, '#{random_date}', #{rand(1..20) * 1000}, " \
-                  "#{rand(1..40_000)}, #{rand(1..5_000)} #{rand(1..50_000)}),")
+                  "#{rand(1..40_000)}, #{rand(1..5_000)}, #{rand(1..50_000)}),")
       end
       file.puts("\t(#{rand(1..20)}, '#{random_date}', #{rand(1..20) * 1000}, " \
                 "#{rand(1..40_000)}, #{rand(1..5_000)}, #{rand(1..50_000)});")

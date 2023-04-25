@@ -26,12 +26,12 @@ module Generator
 
   # метод заполнения всех таблиц
   def insert_into
-    # insert_into_clients
-    # insert_into_banned_clients
-    # insert_into_speech_therapists
-    # insert_into_types
-    # insert_into_services
-    # insert_into_comments
+    insert_into_clients
+    insert_into_banned_clients
+    insert_into_speech_therapists
+    insert_into_types
+    insert_into_services
+    insert_into_comments
     insert_into_contracts
   end
 
@@ -72,6 +72,8 @@ module Generator
               "\tachievements text NOT NULL,\n" \
               "\tphoto_url text NOT NULL,\n" \
               "\tverificated boolean NOT NULL,\n" \
+              "\tjob_start date NOT NULL,\n" \
+              "\tjob_end date,\n" \ # если пустое, то логопед еще работает
               "\tclient_id integer REFERENCES clients (id) NOT NULL\n" \
               ");\n\n")
   end
@@ -116,6 +118,11 @@ module Generator
               "\tid serial PRIMARY KEY,\n" \
               "\thours integer NOT NULL,\n" \
               "\ttotal_cost integer NOT NULL,\n" \
+              "\tissue_date date NOT NULL,\n" \
+              "\tchild_surname varchar(23) NOT NULL,\n" \
+              "\tchild_first_name varchar(23) NOT NULL,\n" \
+              "\tchild_patronymic varchar(23) NOT NULL,\n" \
+              "\tchild_birthday date NOT NULL,\n" \
               "\tissue_date date NOT NULL,\n" \
               "\tclient_id integer REFERENCES clients (id) NOT NULL,\n" \
               "\tservice_id integer REFERENCES services (id) NOT NULL,\n" \
